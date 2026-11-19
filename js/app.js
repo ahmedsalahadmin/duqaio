@@ -1,6 +1,7 @@
 import { BRAND, MENU, MONEY, DELIVERY_FEE } from './data.js';
 import { Glitch } from './glitch.js';
 import { doodle, clearDoodles, burst, NEON } from './doodles.js';
+import { haptic, HAPTIC } from './haptics.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const app = $('#app');
@@ -116,7 +117,7 @@ function setLayout(name) {
     switching = false;
   }, reduced ? 0 : 260);
 }
-document.querySelectorAll('#layoutSwitch [data-layout]').forEach((b) => (b.onclick = () => setLayout(b.dataset.layout)));
+document.querySelectorAll('#layoutSwitch [data-layout]').forEach((b) => (b.onclick = () => { haptic(HAPTIC.tick); setLayout(b.dataset.layout); }));
 
 let W = 0, H = 0, CX = 0, CY = 0, geo = [];
 const HALO_TOP = 1.3; // scale of the selected (top) bowl in the halo
@@ -227,6 +228,7 @@ function tick(t) {
   // doodle the selection once the ring has come to rest; wipe them as soon as it moves
   const settled = !drag.active && !frozen && !switching && Math.abs(omega) < 0.05 && Math.abs(theta - Math.round(theta / STEP) * STEP) < 0.01;
   if (settled && focused && doodledFor !== focused) {
+    if (doodledFor !== null || drag.moved > 9) haptic(HAPTIC.select); // a bowl clicks into place (Android; iPhone allows haptics only during a tap)
     doodledFor = focused;
     clearDoodles(menuDoodles, '.sel, .selw');
     const it = items.find((i) => i.dish === focused);
@@ -316,7 +318,7 @@ function endDrag(e, cancelled) {
   if (!cancelled && drag.moved < 9 && now - drag.t0 < 450 && !drag.caught) {
     omega = 0;
     const hit = hitTest(e.clientX, e.clientY);
-    if (hit) go(`#${hit.dish.id}`, { source: hit });
+    if (hit) { haptic(HAPTIC.select); go(`#${hit.dish.id}`, { source: hit }); }
   }
 }
 universe.addEventListener('pointerup', (e) => endDrag(e, false));
@@ -360,7 +362,7 @@ hero.style.position = 'fixed';
 const chip = $('#modeChip');
 const glitch = new Glitch(hero, {
   onMode: (m) => { chip.classList.toggle('is-anime', m === 'anime'); },
-  onBurst: (dur) => { dDoodles.classList.add('glitching'); clearTimeout(dDoodles._t); dDoodles._t = setTimeout(() => dDoodles.classList.remove('glitching'), dur); },
+  onBurst: (dur) => { if (!detail.busy) haptic(HAPTIC.glitch); dDoodles.classList.add('glitching'); clearTimeout(dDoodles._t); dDoodles._t = setTimeout(() => dDoodles.classList.remove('glitching'), dur); },
 });
 const detail = { current: null, source: null, qty: 1, rect: null, anim: null, busy: false };
 
@@ -476,8 +478,8 @@ function syncQty() {
   $('#addTotal').textContent = fmt(detail.current.price * detail.qty);
   $('#qMinus').disabled = detail.qty <= 1;
 }
-$('#qMinus').onclick = () => { if (detail.qty > 1) { detail.qty--; syncQty(); } };
-$('#qPlus').onclick = () => { if (detail.qty < 20) { detail.qty++; syncQty(); } };
+$('#qMinus').onclick = () => { if (detail.qty > 1) { detail.qty--; syncQty(); haptic(HAPTIC.tick); } };
+$('#qPlus').onclick = () => { if (detail.qty < 20) { detail.qty++; syncQty(); haptic(HAPTIC.tick); } };
 chip.addEventListener('click', () => glitch.flip());
 
 // ─── Swipe down to go back ───────────────────────────────
@@ -534,7 +536,7 @@ function endPull(e, cancelled) {
     if (pull.onHero) glitch.flip();
     return;
   }
-  if (!cancelled && (pull.dy > 130 || (pull.dy > 40 && v > 0.55))) back();
+  if (!cancelled && (pull.dy > 130 || (pull.dy > 40 && v > 0.55))) { haptic(HAPTIC.select); back(); }
   else resetPull(true);
 }
 detailEl.addEventListener('pointerup', (e) => endPull(e, false));
@@ -544,6 +546,7 @@ $('#dClose').onclick = () => back();
 $('#addBtn').onclick = () => {
   if (detail.busy || !detail.current) return;
   detail.busy = true;
+  haptic(HAPTIC.add);
   const d = detail.current;
   cart.set(d.id, Math.min(99, (cart.get(d.id) || 0) + detail.qty));
   saveCart();
@@ -569,7 +572,7 @@ let sheetOpen = false;
 const info = { method: null, table: params.get('table') || '', tableFromQR: !!params.get('table'), address: '', phone: '', notes: '' };
 let lastOrder = null;
 
-fab.onclick = () => go('#order');
+fab.onclick = () => { haptic(HAPTIC.tick); go('#order'); };
 
 const STEPS = { cart: 'YOUR ORDER', method: 'HOW', details: 'DETAILS', review: 'REVIEW', done: 'CONFIRMED' };
 const ICON_BACK = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>';
@@ -712,11 +715,11 @@ inner.addEventListener('click', (e) => {
   switch (b.dataset.act) {
     case 'back': back(); break;
     case 'close': back(); break;
-    case 'inc': cart.set(id, Math.min(99, cart.get(id) + 1)); saveCart(); updateFab(); renderSheet('cart'); break;
-    case 'dec': if (cart.get(id) > 1) cart.set(id, cart.get(id) - 1); else cart.delete(id); saveCart(); updateFab(); renderSheet('cart'); break;
+    case 'inc': haptic(HAPTIC.tick); cart.set(id, Math.min(99, cart.get(id) + 1)); saveCart(); updateFab(); renderSheet('cart'); break;
+    case 'dec': haptic(HAPTIC.tick); if (cart.get(id) > 1) cart.set(id, cart.get(id) - 1); else cart.delete(id); saveCart(); updateFab(); renderSheet('cart'); break;
     case 'rm': cart.delete(id); saveCart(); updateFab(); renderSheet('cart'); toast(`${byId[id].name.toUpperCase()} REMOVED`); break;
     case 'next': go(`#order-${b.dataset.to}`); break;
-    case 'method': info.method = b.dataset.m; go('#order-details'); break;
+    case 'method': haptic(HAPTIC.tick); info.method = b.dataset.m; go('#order-details'); break;
     case 'details-next': if (readDetails()) go('#order-review'); else inner.querySelector('.err input, .err textarea')?.focus(); break;
     case 'place': placeOrder(); break;
     case 'finish': finish(); break;
@@ -724,6 +727,7 @@ inner.addEventListener('click', (e) => {
 });
 
 function placeOrder() {
+  haptic(HAPTIC.order);
   const fee = info.method === 'delivery' ? DELIVERY_FEE : 0;
   lastOrder = {
     no: `${BRAND.orderPrefix}-${Math.floor(1000 + Math.random() * 9000)}`,
