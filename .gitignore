@@ -1,0 +1,5 @@
+# raw source stickers, local builds and review screenshots stay on this PC
+_incoming_assets/
+dist/
+showcase/
+__pycache__/

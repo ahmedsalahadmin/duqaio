@@ -1,0 +1,82 @@
+{
+ "spicy-ramen": {
+  "w": 378,
+  "h": 457,
+  "scale": 1.02,
+  "dx": -1,
+  "dy": 17,
+  "score": 0.449,
+  "removed_real": [
+   1
+  ],
+  "removed_anime": []
+ },
+ "shrimp-noodles": {
+  "w": 377,
+  "h": 446,
+  "scale": 1.0025,
+  "dx": -6,
+  "dy": 39,
+  "score": 0.485,
+  "removed_real": [
+   889,
+   33
+  ],
+  "removed_anime": [
+   758
+  ]
+ },
+ "black-garlic-ramen": {
+  "w": 356,
+  "h": 412,
+  "scale": 1.0025,
+  "dx": -7,
+  "dy": -3,
+  "score": 0.458,
+  "removed_real": [
+   1403
+  ],
+  "removed_anime": [
+   1749
+  ]
+ },
+ "sesame-dan-dan": {
+  "w": 355,
+  "h": 405,
+  "scale": 1.0025,
+  "dx": -4,
+  "dy": -4,
+  "score": 0.505,
+  "removed_real": [
+   1,
+   1
+  ],
+  "removed_anime": [
+   2,
+   56,
+   1,
+   51,
+   317,
+   1,
+   177,
+   3,
+   1
+  ]
+ },
+ "mushroom-udon": {
+  "w": 368,
+  "h": 415,
+  "scale": 1.0125,
+  "dx": 8,
+  "dy": 19,
+  "score": 0.413,
+  "removed_real": [
+   48,
+   1091
+  ],
+  "removed_anime": [
+   4,
+   92
+  ]
+ }
+}
