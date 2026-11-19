@@ -847,16 +847,24 @@ function doodleDone() {
   burst($('#fx'), innerWidth / 2, nr.top + nr.height / 2, 16);
 }
 
-// ─── #buzz: a one-tap check of whether this phone allows web haptics ───
+// ─── #buzz: which haptic method does this phone allow? ───
+// 1 = a visible native switch (the system always ticks when a finger flips one)
+// 2 = an invisible native switch laid over a button, so the finger flips it without seeing it
+// 3 = the script-only trick (clicking a hidden switch from code)
 function showBuzzTest() {
   if ($('#buzzTest')) return;
   const el = document.createElement('div');
   el.id = 'buzzTest';
-  el.innerHTML = `<button class="add" id="buzzBtn"><span>TAP TO BUZZ</span></button>
-    <p class="note">Method on this phone: <b>${hapticInfo()}</b>. iPhone needs iOS 18+ and Settings → Sounds &amp; Haptics → System Haptics on.</p>
+  el.innerHTML = `
+    <p class="note" style="margin:0">iOS ${(/OS (\d+)_(\d+)/.exec(navigator.userAgent) || []).slice(1).join('.') || '?'} · method: <b>${hapticInfo()}</b></p>
+    <label class="bz-row">1 · Flip this switch <input type="checkbox" switch id="bz1"></label>
+    <div class="bz-wrap"><button class="add" tabindex="-1"><span>2 · TAP THIS BUTTON</span></button><label class="bz-ghost"><input type="checkbox" switch id="bz2"></label></div>
+    <button class="add" id="bz3" style="background:var(--ink)"><span>3 · SCRIPT TRICK</span></button>
+    <p class="note" style="margin:0">Tell me which numbers you felt.</p>
     <button class="rm" id="buzzClose">CLOSE</button>`;
-  el.style.cssText = 'position:absolute;z-index:80;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);background:var(--paper);border:1.5px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:10px;justify-items:center;text-align:center';
+  el.style.cssText = 'position:absolute;z-index:80;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);background:var(--paper);border:1.5px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:12px;justify-items:stretch;text-align:center;touch-action:manipulation';
   app.appendChild(el);
-  $('#buzzBtn').onclick = () => { haptic(HAPTIC.test); toast('BUZZ SENT'); };
+  $('#bz2').addEventListener('change', () => toast('2 TAPPED'));
+  $('#bz3').onclick = () => { haptic(HAPTIC.test); toast('3 SENT'); };
   $('#buzzClose').onclick = () => { el.remove(); replaceTo(MENU_URL()); };
 }
