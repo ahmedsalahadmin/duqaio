@@ -1,7 +1,7 @@
 import { BRAND, MENU, MONEY, DELIVERY_FEE } from './data.js';
 import { Glitch } from './glitch.js';
 import { doodle, clearDoodles, burst, NEON } from './doodles.js';
-import { haptic, HAPTIC } from './haptics.js';
+import { haptic, hapticSoon, HAPTIC, hapticInfo } from './haptics.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const app = $('#app');
@@ -318,7 +318,7 @@ function endDrag(e, cancelled) {
   if (!cancelled && drag.moved < 9 && now - drag.t0 < 450 && !drag.caught) {
     omega = 0;
     const hit = hitTest(e.clientX, e.clientY);
-    if (hit) { haptic(HAPTIC.select); go(`#${hit.dish.id}`, { source: hit }); }
+    if (hit) { hapticSoon(HAPTIC.select); go(`#${hit.dish.id}`, { source: hit }); }
   }
 }
 universe.addEventListener('pointerup', (e) => endDrag(e, false));
@@ -362,7 +362,7 @@ hero.style.position = 'fixed';
 const chip = $('#modeChip');
 const glitch = new Glitch(hero, {
   onMode: (m) => { chip.classList.toggle('is-anime', m === 'anime'); },
-  onBurst: (dur) => { if (!detail.busy) haptic(HAPTIC.glitch); dDoodles.classList.add('glitching'); clearTimeout(dDoodles._t); dDoodles._t = setTimeout(() => dDoodles.classList.remove('glitching'), dur); },
+  onBurst: (dur) => { if (!detail.busy) hapticSoon(HAPTIC.glitch); dDoodles.classList.add('glitching'); clearTimeout(dDoodles._t); dDoodles._t = setTimeout(() => dDoodles.classList.remove('glitching'), dur); },
 });
 const detail = { current: null, source: null, qty: 1, rect: null, anim: null, busy: false };
 
@@ -536,7 +536,7 @@ function endPull(e, cancelled) {
     if (pull.onHero) glitch.flip();
     return;
   }
-  if (!cancelled && (pull.dy > 130 || (pull.dy > 40 && v > 0.55))) { haptic(HAPTIC.select); back(); }
+  if (!cancelled && (pull.dy > 130 || (pull.dy > 40 && v > 0.55))) { hapticSoon(HAPTIC.select); back(); }
   else resetPull(true);
 }
 detailEl.addEventListener('pointerup', (e) => endPull(e, false));
@@ -784,6 +784,7 @@ function route() {
   const ctx = navCtx; navCtx = null;
   const table = /^table-(\d{1,3})$/.exec(h); // dine-in QR codes link to #table-12
   if (table) { info.table = table[1]; info.tableFromQR = true; replaceTo(MENU_URL()); return; }
+  if (h === 'buzz') { showBuzzTest(); return; }
   if (byId[h]) {
     if (sheetOpen) closeSheet();
     if (detail.current?.id !== h) { if (detail.current) closeDish(); openDish(h, ctx?.source); }
@@ -844,4 +845,18 @@ function doodleDone() {
   doodle(host, nr.right - hr.left + 8, nr.top - hr.top + 6, { type: 'sparkle', color: NEON.teal, size: 30, delay: 350, width: 4 });
   doodle(host, nr.right - hr.left + 2, by - 6, { type: 'heart', color: NEON.pink, size: 26, rot: 12, delay: 450, width: 3 });
   burst($('#fx'), innerWidth / 2, nr.top + nr.height / 2, 16);
+}
+
+// ─── #buzz: a one-tap check of whether this phone allows web haptics ───
+function showBuzzTest() {
+  if ($('#buzzTest')) return;
+  const el = document.createElement('div');
+  el.id = 'buzzTest';
+  el.innerHTML = `<button class="add" id="buzzBtn"><span>TAP TO BUZZ</span></button>
+    <p class="note">Method on this phone: <b>${hapticInfo()}</b>. iPhone needs iOS 18+ and Settings → Sounds &amp; Haptics → System Haptics on.</p>
+    <button class="rm" id="buzzClose">CLOSE</button>`;
+  el.style.cssText = 'position:absolute;z-index:80;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);background:var(--paper);border:1.5px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:10px;justify-items:center;text-align:center';
+  app.appendChild(el);
+  $('#buzzBtn').onclick = () => { haptic(HAPTIC.test); toast('BUZZ SENT'); };
+  $('#buzzClose').onclick = () => { el.remove(); replaceTo(MENU_URL()); };
 }
