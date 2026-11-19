@@ -1,5 +1,7 @@
 # DUQAIO — Noodle Universe (front-end prototype)
 
+**Live:** https://ahmedsalahadmin.github.io/duqaio/ (GitHub Pages from `main`; every push to `main` updates it in a minute or two)
+
 Static site, no build step: `index.html`, `styles.css`, `js/`, `assets/`.
 It can go up as-is on any static host (Netlify, Vercel, GitHub Pages, S3).
 
