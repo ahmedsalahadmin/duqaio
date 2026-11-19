@@ -3,3 +3,7 @@ _incoming_assets/
 dist/
 showcase/
 __pycache__/
+
+.vercel
+.env*
+.vercel/

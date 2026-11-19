@@ -1,0 +1,8 @@
+# deploy only the website itself
+_incoming_assets/
+dist/
+showcase/
+tools/
+__pycache__/
+README.md
+assets/dishes/manifest.json

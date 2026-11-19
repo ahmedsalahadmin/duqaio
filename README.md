@@ -1,6 +1,7 @@
 # DUQAIO — Noodle Universe (front-end prototype)
 
-**Live:** https://ahmedsalahadmin.github.io/duqaio/ (GitHub Pages from `main`; every push to `main` updates it in a minute or two)
+**Live:** https://presentationrestaurant.vercel.app/ (Vercel project `presentation-restaurant`; redeploy with `vercel deploy --prod` from this folder)
+Also on GitHub Pages: https://ahmedsalahadmin.github.io/duqaio/ (updates on every push to `main`)
 
 Static site, no build step: `index.html`, `styles.css`, `js/`, `assets/`.
 It can go up as-is on any static host (Netlify, Vercel, GitHub Pages, S3).
