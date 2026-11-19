@@ -57,3 +57,27 @@ document.addEventListener('click', () => {
   const p = pending; pending = null;
   haptic(p);
 }, true);
+
+// ── iPhone: invisible native switches under tappable things ──
+// Tested on the client's iPhone: a script-clicked switch gives nothing, but when the visitor's own
+// finger flips an invisible <input switch> laid over a button, iOS plays its switch tick.
+// So on iPhone every tappable element gets one. The tap still reaches the element (the switch sits
+// inside it and the click bubbles up). Android ignores all this and uses navigator.vibrate.
+const forceIOS = new URLSearchParams(location.search).has('iosHaptics'); // for testing on a desktop
+export const touchSwitches = isIOS || forceIOS;
+
+export function addTouchSwitch(el) {
+  if (!touchSwitches || !el || el.querySelector(':scope > .hz')) return;
+  const l = document.createElement('label');
+  l.className = 'hz';
+  l.setAttribute('aria-hidden', 'true');
+  l.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+  // a tap on the label's edge would click both the label and (forwarded) the switch; let only the switch's click through
+  l.addEventListener('click', (e) => { if (e.target === l) e.stopPropagation(); });
+  if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+  el.appendChild(l);
+}
+export function addTouchSwitches(root, selector) {
+  if (!touchSwitches) return;
+  root.querySelectorAll(selector).forEach(addTouchSwitch);
+}

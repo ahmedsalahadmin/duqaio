@@ -1,7 +1,7 @@
 import { BRAND, MENU, MONEY, DELIVERY_FEE } from './data.js';
 import { Glitch } from './glitch.js';
 import { doodle, clearDoodles, burst, NEON } from './doodles.js';
-import { haptic, hapticSoon, HAPTIC, hapticInfo } from './haptics.js';
+import { haptic, hapticSoon, HAPTIC, hapticInfo, addTouchSwitch, addTouchSwitches } from './haptics.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const app = $('#app');
@@ -81,6 +81,7 @@ function buildItems() {
       if (first) el.setAttribute('aria-label', `${dish.name}, ${fmt(dish.price)}${dish.heat ? `, ${HEAT[dish.heat].toLowerCase()}` : ''}`);
       else { el.tabIndex = -1; el.setAttribute('aria-hidden', 'true'); }
       itemsEl.appendChild(el);
+      addTouchSwitch(el); // iPhone tick when a bowl is tapped
       items.push({ el, dish, ring: r, a0: (i / ring.n) * Math.PI * 2, phase: Math.random() * 6.28, x: 0, y: 0, w: 0, h: 0, sc: 1, rot: 0, z: -1 });
     }
   });
@@ -337,6 +338,7 @@ function hitTest(x, y) {
 // keyboard (focus a bowl + Enter) and arrows / wheel spin
 itemsEl.addEventListener('click', (e) => {
   if (e.detail !== 0) return; // pointer taps are handled above
+  if (e.target.closest('.hz')) return; // the iPhone haptic switch's own click
   const el = e.target.closest('.dish');
   const it = items.find((i) => i.el === el);
   if (it) go(`#${it.dish.id}`, { source: it });
@@ -389,6 +391,8 @@ function placeHero() {
   const h = w * ar;
   const left = st.left + (st.width - w) / 2, top = st.top + (st.height - h) / 2;
   hero.style.left = left + 'px'; hero.style.top = top + 'px';
+  const hg = $('#heroGhost'); // invisible switch over the zoomed dish (iPhone tick on tap)
+  Object.assign(hg.style, { left: left + 'px', top: top + 'px', width: w + 'px', height: h + 'px' });
   const hh = $('#heroHeat');
   hh.style.left = left + w * 0.52 + 'px'; hh.style.top = top - h * 0.04 + 'px'; hh.style.width = w * 0.58 + 'px';
   detail.rect = { left, top, w, h, cx: left + w / 2, cy: top + h / 2 };
@@ -511,9 +515,9 @@ function resetPull(animate) {
 detailEl.addEventListener('pointerdown', (e) => {
   if (!detail.current || detail.busy || pull.active) return;
   if (e.button !== undefined && e.button !== 0) return;
-  if (e.target.closest('button, input, output, .stepper')) return;
+  if (e.target.closest('button, input, output, .stepper') && !e.target.closest('#heroGhost')) return;
   pull.active = true; pull.id = e.pointerId; pull.x0 = e.clientX; pull.y0 = e.clientY;
-  pull.dy = 0; pull.moved = 0; pull.onHero = e.target === hero;
+  pull.dy = 0; pull.moved = 0; pull.onHero = e.target === hero || !!e.target.closest('#heroGhost');
   pull.samples = [{ t: performance.now(), y: e.clientY }];
   try { detailEl.setPointerCapture(e.pointerId); } catch {}
 });
@@ -681,6 +685,7 @@ function renderSheet(step) {
 
   inner.innerHTML = `${head}${title ? `<h2 class="s-title">${title}</h2>` : ''}<div class="s-body">${body}</div>${foot ? `<div class="s-foot">${foot}</div>` : ''}`;
   inner.dataset.step = step;
+  addTouchSwitches(inner, 'button');
   if (step === 'done') setTimeout(doodleDone, 250);
 }
 
@@ -868,3 +873,7 @@ function showBuzzTest() {
   $('#bz3').onclick = () => { haptic(HAPTIC.test); toast('3 SENT'); };
   $('#buzzClose').onclick = () => { el.remove(); replaceTo(MENU_URL()); };
 }
+
+// iPhone haptics: invisible switches under the fixed controls
+addTouchSwitches(document, '#addBtn, #qMinus, #qPlus, #modeChip, #fab, #dClose, #layoutSwitch button');
+addTouchSwitch($('#heroGhost'));
